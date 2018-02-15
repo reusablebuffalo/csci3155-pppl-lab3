@@ -96,12 +96,86 @@ object Lab3 extends JsyApplication with Lab3Like {
     e match {
       /* Base Cases */
       case N(_) | B(_) | S(_) | Undefined | Function(_, _, _) => e
-      case Var(x) => ???
+      case Var(x) => lookup(env, x)// returns looked up variable
       
       /* Inductive Cases */
       case Print(e1) => println(pretty(eval(env, e1))); Undefined
 
         // ****** Your cases here
+      /* Base Cases */
+      //case N(n) => N(n)
+      //case S(s) => S(s)
+      //case B(b) => B(b)
+      //case Undefined => Undefined
+      //case Var(x) => lookup(env, x)// returns looked up variable
+
+      /* Binary */
+      case Binary(bop, e1, e2) => bop match {
+
+        /* Binary Arithmetic Ops */
+        case Plus => (eval(env,e1),eval(env,e2)) match {
+          case (S(s1), S(s2)) => S(s1 + s2)
+          case (S(s1), expr2) => S(s1 + toStr(expr2))
+          case (expr1, S(s2)) => S(toStr(expr1) + s2)
+          case (expr1, expr2) => N(toNumber(expr1) + toNumber(expr2))
+        }
+        case Minus => N(toNumber(eval(env,e1))-toNumber(eval(env,e2)))
+        case Div => N(toNumber(eval(env,e1))/toNumber(eval(env, e2)))
+        case Times => N(toNumber(eval(env,e1))*toNumber(eval(env,e2)))
+
+        /* Binary Comparison Ops */
+        // return first to eval to false or if both are true return the first expr
+        case And => if(!toBoolean(eval(env,e1))) eval(env,e1) else eval(env,e2)
+        // return the first to eval to true, if both false return the 2nd expr
+        case Or => if(toBoolean(eval(env,e1))) eval(env,e1) else eval(env,e2)
+        case Eq => (eval(env,e1),eval(env,e2)) match {
+          //case (S(s1), S(s2)) => B(s1 == s2)
+          //case (Undefined, Undefined) => B(true)
+          case (expr1,expr2) => B(if(expr1 == expr2) true else false)
+        }
+        case Ne => (eval(env,e1),eval(env,e2)) match {
+          //case (S(s1), S(s2)) => B(s1 != s2)
+          //case (Undefined, Undefined) => B(false)
+          case (expr1,expr2) => B(if(expr1 != expr2) true else false)
+        }
+        case Lt => (eval(env,e1),eval(env,e2)) match {
+          case (S(s1), S(s2)) => B(s1 < s2)
+          case (expr1, expr2) => B(if(toNumber(expr1) < toNumber(expr2)) true else false)
+        }
+        case Le => (eval(env,e1),eval(env,e2)) match {
+          case (S(s1), S(s2)) => B(s1 <= s2)
+          case (expr1, expr2) => B(if(toNumber(expr1) <= toNumber(expr2)) true else false)
+        }
+        case Gt => (eval(env,e1),eval(env,e2)) match {
+          case (S(s1), S(s2)) => B(s1 > s2)
+          case (expr1, expr2) => B(if(toNumber(expr1) > toNumber(expr2)) true else false)
+        }
+        case Ge => (eval(env,e1),eval(env,e2)) match {
+          case (S(s1), S(s2)) => B(s1 >= s2)
+          case (expr1, expr2) => B(if(toNumber(expr1) >= toNumber(expr2)) true else false)
+        }
+
+        /* Sequence Op */
+        case Seq => eval(env, e1); eval(env,e2)
+      }
+      /* Ternary Op*/
+      case If(e1, e2, e3) => if(toBoolean(eval(env,e1))) {eval(env, e2)} else {eval(env, e3)}
+      // if e1 evals to true eval e2 else eval e3
+
+      /* Unary */
+      case Unary(uop, e1) => uop match{
+        case Neg => eval(env,e1) match {
+          case N(0.0) => N(-0.0)
+          case _ => N(-toNumber(eval(env,e1)))
+        }
+        case Not => B(!toBoolean(eval(env,e1)))
+      }
+
+      /* Var */
+      //case Var(x) => try {lookup(env, x)} catch { case e:java.util.NoSuchElementException => Undefined}
+
+      /* ConstDecl */
+      case ConstDecl(x, e1, e2) => eval(extend(env , x, eval(env,e1)), e2)
 
       case Call(e1, e2) => ???
       case _ => ??? // delete this line when done
