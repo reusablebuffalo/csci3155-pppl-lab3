@@ -90,7 +90,19 @@ object Lab3 extends JsyApplication with Lab3Like {
     require(isValue(v2))
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
     (v1, v2) match {
-      case _ => ??? // delete this line when done
+      case (S(s1), S(s2)) => bop match {
+        case Lt => s1<s2
+        case Le => s1<=s2
+        case Gt => s1>s2
+        case Ge => s1>=s2
+      }
+      case (e1, e2) => bop match {
+        case Lt => toNumber(e1) < toNumber(e2)
+        case Le => toNumber(e1) <= toNumber(e2)
+        case Gt => toNumber(e1) > toNumber(e2)
+        case Ge => toNumber(e1) >= toNumber(e2)
+      }
+      // delete this line when done
     }
   }
 
@@ -137,31 +149,16 @@ object Lab3 extends JsyApplication with Lab3Like {
         // return the first to eval to true, if both false return the 2nd expr
         case Or => if(toBoolean(eval(env,e1))) eval(env,e1) else eval(env,e2)
         case Eq => (eval(env,e1),eval(env,e2)) match {
-          //case (S(s1), S(s2)) => B(s1 == s2)
-          //case (Undefined, Undefined) => B(true)
+          case (Function(_,_,_), _) => throw DynamicTypeError(e)
+          case (_, Function(_,_,_))=> throw DynamicTypeError(e)
           case (expr1,expr2) => B(if(expr1 == expr2) true else false)
         }
         case Ne => (eval(env,e1),eval(env,e2)) match {
-          //case (S(s1), S(s2)) => B(s1 != s2)
-          //case (Undefined, Undefined) => B(false)
+          case (Function(_,_,_), _) => throw DynamicTypeError(e)
+          case (_, Function(_,_,_))=> throw DynamicTypeError(e)
           case (expr1,expr2) => B(if(expr1 != expr2) true else false)
         }
-        case Lt => (eval(env,e1),eval(env,e2)) match {
-          case (S(s1), S(s2)) => B(s1 < s2)
-          case (expr1, expr2) => B(if(toNumber(expr1) < toNumber(expr2)) true else false)
-        }
-        case Le => (eval(env,e1),eval(env,e2)) match {
-          case (S(s1), S(s2)) => B(s1 <= s2)
-          case (expr1, expr2) => B(if(toNumber(expr1) <= toNumber(expr2)) true else false)
-        }
-        case Gt => (eval(env,e1),eval(env,e2)) match {
-          case (S(s1), S(s2)) => B(s1 > s2)
-          case (expr1, expr2) => B(if(toNumber(expr1) > toNumber(expr2)) true else false)
-        }
-        case Ge => (eval(env,e1),eval(env,e2)) match {
-          case (S(s1), S(s2)) => B(s1 >= s2)
-          case (expr1, expr2) => B(if(toNumber(expr1) >= toNumber(expr2)) true else false)
-        }
+        case (Lt | Le | Gt | Ge) => B(inequalityVal(bop, eval(env, e1), eval(env, e2))) // deals with inequalities
 
         /* Sequence Op */
         case Seq => eval(env, e1); eval(env,e2)
@@ -185,7 +182,13 @@ object Lab3 extends JsyApplication with Lab3Like {
       /* ConstDecl */
       case ConstDecl(x, e1, e2) => eval(extend(env , x, eval(env,e1)), e2)
 
-      case Call(e1, e2) => ???
+      case Call(e1, e2) => (eval(env,e1), eval(env,e2)) match {
+        case (Function(Some(p), x, v1), v2) => {
+            eval(extend(extend(env, x, v2), p, Function(Some(p), x, v1)), v1)
+          }
+        case (Function(None, x, v1), v2) => eval(extend(env, x, v2), v1)
+        case _ => throw DynamicTypeError(e)
+      }
       case _ => ??? // delete this line when done
     }
   }
