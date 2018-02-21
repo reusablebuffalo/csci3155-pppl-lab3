@@ -56,7 +56,7 @@ object Lab3 extends JsyApplication with Lab3Like {
       case B(b) => b
       case Function(_, _, _) => true
       case N(0.0) => false
-      case N(-0.0) => false
+      //case N(-0.0) => false
       case N(n) => if (n.isNaN) false else true
       case S(s) => if (s == "") false else true
       case Undefined => false
@@ -197,7 +197,10 @@ object Lab3 extends JsyApplication with Lab3Like {
   /* Small-Step Interpreter with Static Scoping */
 
   def iterate(e0: Expr)(next: (Expr, Int) => Option[Expr]): Expr = {
-    def loop(e: Expr, n: Int): Expr = ???
+    def loop(e: Expr, n: Int): Expr = next(e,n) match { // find next
+      case None => e // if None, return e
+      case Some(exp) => loop(exp, n+1) // else recurse
+    }
     loop(e0, 0)
   }
 
