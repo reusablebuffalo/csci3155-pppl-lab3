@@ -224,7 +224,32 @@ object Lab3 extends JsyApplication with Lab3Like {
     e match {
       /* Base Cases: Do Rules */
       case Print(v1) if isValue(v1) => println(pretty(v1)); Undefined
-
+      case N(_) | B(_) | S(_) | Undefined | Function(_, _, _) => e
+      case Unary(Neg, v) if isValue(v) => N(-toNumber(v)) // do neg
+      case Unary(Not, v) if isValue(v) => B(!toBoolean(v)) // do not
+      case Binary(Seq, v1, e2) if isValue(v1) => e2 // do seq
+      case Binary(Plus, v1, v2) if isValue(v1) && isValue(v2) => (v1,v2) match {
+        case (S(s1), S(s2)) => S(s1 + s2)
+        case (_, S(s2)) => S(toStr(v1) + s2)
+        case (S(s1), _) => S(s1 + toStr(v2))
+        case (_, _) => N(toNumber(v1) + toNumber(v2))
+      }
+      case Binary(bop, v1, v2) if isValue(v1) && isValue(v2) => bop match { // do arith
+        case Minus => N(toNumber(v1) - toNumber(v2))
+        case Div => N(toNumber(v1) / toNumber(v2))
+        case Times => N(toNumber(v1) * toNumber(v2))
+        case Lt | Le | Gt | Ge => B(inequalityVal(bop, v1, v2)) // do inequality (all cases handled by inequalityVal() )
+        case Eq => (v1,v2) match { // do equality
+          case (Function(_,_,_), _) => throw DynamicTypeError(e)
+          case (_, Function(_,_,_)) => throw DynamicTypeError(e)
+          case (_, _) => B(v1 == v2)
+        }
+        case Ne => (v1,v2) match {
+          case (Function(_,_,_), _) => throw DynamicTypeError(e)
+          case (_, Function(_,_,_)) => throw DynamicTypeError(e)
+          case (_, _) => B(v1 != v2)
+        }
+      }
         // ****** Your cases here
 
       /* Inductive Cases: Search Rules */
