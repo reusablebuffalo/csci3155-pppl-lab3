@@ -156,16 +156,29 @@ object Lab3 extends JsyApplication with Lab3Like {
             val eval1 = eval(env,e1) // make sure only evaluated once
             if(toBoolean(eval1)) eval1 else eval(env,e2)
           }
-        case Eq => (eval(env,e1),eval(env,e2)) match {
-          case (Function(_,_,_), _) => throw DynamicTypeError(e)
-          case (_, Function(_,_,_))=> throw DynamicTypeError(e)
-          case (expr1,expr2) => B(if(expr1 == expr2) true else false)
-        }
-        case Ne => (eval(env,e1),eval(env,e2)) match {
-          case (Function(_,_,_), _) => throw DynamicTypeError(e)
-          case (_, Function(_,_,_))=> throw DynamicTypeError(e)
-          case (expr1,expr2) => B(if(expr1 != expr2) true else false)
-        }
+        case Eq =>
+          val v1 = eval(env, e1)
+          v1 match {
+            case Function(_, _, _) => throw DynamicTypeError(e)
+            case _ =>
+              val v2 = eval(env, e2)
+              v2 match {
+                case Function(_, _, _) => throw DynamicTypeError(e)
+                case _ => B(v1 == v2)
+              }
+          }
+        case Ne =>
+          val v1 = eval(env, e1)
+          v1 match {
+            case Function(_, _, _) => throw DynamicTypeError(e)
+            case _ =>
+              val v2 = eval(env, e2)
+              v2 match {
+                case Function(_, _, _) => throw DynamicTypeError(e)
+                case _ => B(v1 != v2)
+              }
+          }
+
         case (Lt | Le | Gt | Ge) => B(inequalityVal(bop, eval(env, e1), eval(env, e2))) // deals with inequalities
 
         /* Sequence Op */
@@ -179,7 +192,7 @@ object Lab3 extends JsyApplication with Lab3Like {
       case Unary(uop, e1) => uop match{
         case Neg => eval(env,e1) match {
           case N(0.0) => N(-0.0)
-          case _ => N(-toNumber(eval(env,e1)))
+          case eval1 => N(-toNumber(eval1))
         }
         case Not => B(!toBoolean(eval(env,e1)))
       }
@@ -190,11 +203,11 @@ object Lab3 extends JsyApplication with Lab3Like {
       /* ConstDecl */
       case ConstDecl(x, e1, e2) => eval(extend(env , x, eval(env,e1)), e2)
 
-      case Call(e1, e2) => (eval(env,e1), eval(env,e2)) match {
-        case (Function(Some(p), x, v1), v2) => {
-            eval(extend(extend(env, x, v2), p, Function(Some(p), x, v1)), v1)
+      case Call(e1, e2) => (eval(env,e1), e2) match { // be sure to short circuit type errors
+        case (Function(Some(p), x, v1), e2) => {
+            eval(extend(extend(env, x, eval(env, e2)), p, Function(Some(p), x, v1)), v1)
           }
-        case (Function(None, x, v1), v2) => eval(extend(env, x, v2), v1)
+        case (Function(None, x, v1), e2) => eval(extend(env, x, eval(env,e2)), v1)
         case _ => throw DynamicTypeError(e)
       }
       case _ => ??? // delete this line when done
@@ -269,6 +282,7 @@ object Lab3 extends JsyApplication with Lab3Like {
     case Call(v1, v2) if isValue(v1) && isValue(v2) => v1 match {
       case Function(None, x, e1) => substitute(e1, v2, x)
       case Function(Some(x1), x2, e1) => substitute(substitute(e1, v1, x1), v2, x2)
+      case _ => throw DynamicTypeError(e)
     }
     /* Inductive Cases: Search Rules */
     case Print(e1) => Print(step(e1)) // serach print
@@ -280,9 +294,17 @@ object Lab3 extends JsyApplication with Lab3Like {
       case Function(_,_,_) => throw DynamicTypeError(e)
       case _ => Binary(bop, v1, step(e2))
     }
+    case Binary(bop @ (Eq | Ne), v1, e2) if isValue(v1) => v1 match { // serachEquality2
+      case Function(_,_,_) => throw DynamicTypeError(e)
+      case _ => Binary(bop, v1, step(e2))
+    }
     case Binary(bop, v1, e2) if isValue(v1) => Binary(bop, v1, step(e2)) // searchBinaryArith2
     case If(e1, e2, e3) => If(step(e1) , e2, e3) // searchIf
     case ConstDecl(x, e1, e2) => ConstDecl(x, step(e1), e2) // stepConst
+    case Call(v1, e2) if isValue(v1) => v1 match { //type error call
+      case Function(_,_,_) => Call(v1, step(e2))
+      case _ => throw DynamicTypeError(e)
+    }
     case Call(e1, e2) => e1 match {
       case Function(_,_,_) => Call(e1, step(e2)) // recursive call (searchCall2)
       case _ => Call(step(e1), e2) // searchCall1
