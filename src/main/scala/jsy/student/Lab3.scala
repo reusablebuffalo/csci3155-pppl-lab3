@@ -151,7 +151,11 @@ object Lab3 extends JsyApplication with Lab3Like {
             if (toBoolean(eval1)) eval(env,e2) else eval1
           }
         // return the first to eval to true, if both false return the 2nd expr
-        case Or => if(toBoolean(eval(env,e1))) eval(env,e1) else eval(env,e2)
+        case Or =>
+          {
+            val eval1 = eval(env,e1) // make sure only evaluated once
+            if(toBoolean(eval1)) eval1 else eval(env,e2)
+          }
         case Eq => (eval(env,e1),eval(env,e2)) match {
           case (Function(_,_,_), _) => throw DynamicTypeError(e)
           case (_, Function(_,_,_))=> throw DynamicTypeError(e)
