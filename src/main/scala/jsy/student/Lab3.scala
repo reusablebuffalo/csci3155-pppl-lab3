@@ -184,6 +184,7 @@ object Lab3 extends JsyApplication with Lab3Like {
         /* Sequence Op */
         case Seq => eval(env, e1); eval(env,e2)
       }
+
       /* Ternary Op*/
       case If(e1, e2, e3) => if(toBoolean(eval(env,e1))) {eval(env, e2)} else {eval(env, e3)}
       // if e1 evals to true eval e2 else eval e3
@@ -196,9 +197,6 @@ object Lab3 extends JsyApplication with Lab3Like {
         }
         case Not => B(!toBoolean(eval(env,e1)))
       }
-
-      /* Var */
-      //case Var(x) => try {lookup(env, x)} catch { case e:java.util.NoSuchElementException => Undefined}
 
       /* ConstDecl */
       case ConstDecl(x, e1, e2) => eval(extend(env , x, eval(env,e1)), e2)

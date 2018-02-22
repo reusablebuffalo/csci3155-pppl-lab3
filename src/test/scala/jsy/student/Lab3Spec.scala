@@ -131,6 +131,72 @@ class Lab3Spec(lab3: Lab3Like) extends FlatSpec {
       }
     }
   }
+
+  // CUSTOM TEST CASES
+  {
+    val xval = N(2)
+    val envx = extend(empty, "x", xval)
+    val varx = Var("x")
+
+    val e1 = parse("2 - 1 - 1")
+    val e1p = parse("1 - 1")
+    val e2 = parse("3 - 1 - 1")
+    val e2p = parse("2 - 1")
+    val v1 = N(0)
+    val v2 = N(1)
+
+    val vidfunction = parse("function (x) { return x }")
+
+    // ALREADY TESTED ABOVE: EvalVar, EvalNeg, EvalTypeErrorEquality1, DoNeg, SearchUnary
+    "EvalCall" should "perform EvalCall" in {
+      val id = Function(None, "x", Var("x")) //identity function
+      val param = N(15.0)
+      assertResult(N(15.0)) {
+        eval(empty, Call(id, param))
+      }
+    }
+    "EvalCallRec" should "perform EvalCallRec" in {
+      val xplus1 = Function(Some("xplus1"), "x", Binary(Plus, Var("x"), N(1.0)))
+      val x = N(9.0)
+      assertResult(N(10.0)) {
+        eval(empty, Call(xplus1, x) )
+      }
+    }
+    "EvalTypeErrorCall" should "propogate" in {
+      intercept[DynamicTypeError] {
+        eval(empty, Binary(Plus,Call(N(1), N(2.0)),N(6.7))) // 1(2.0) + 6.7 --> should give typerror
+      }
+    }
+    // eval function filled in mostly from lab2 (it was passing test cases here)
+
+    // tests for step and substitute
+
+    "DoNot" should "perform DoNot" in {
+      assert(step(Unary(Not, Undefined)) === B(true))
+    }
+    "DoSeq" should "perform DoSeq" in {
+      assert(step(Binary(Seq, N(1.0), Binary(Div, N(1.0), N(0.0)))) === Binary(Div, N(1.0), N(0.0)))
+    }
+    // other binary/ unary op base cases are simple enough to just test results in Lab3Worksheet.sc
+    "DoConst" should "perform DoConst" in {
+      assert(step(ConstDecl("x", N(1.50), Binary(Times, Var("x"), Undefined))) === Binary(Times, N(1.50), Undefined))
+    }
+    "DoCall" should "perform DoCall" in {
+      val foo = Function(None, "x", Binary(Plus, Var("x"), B(true)))
+      assert(step(Call(foo, B(false))) === Binary(Plus, B(false), B(true)))
+    }
+    "DoCallRec" should "perform DoCallRec" in {
+      val foo = Function(Some("foo"), "y", Binary(Minus, Var("y"), Function(None, "y", N(1.0))))
+      assert(step(Call(foo, B(false))) === Binary(Minus, B(false), Function(None, "y", N(1.0))))
+    }
+    // search rules
+    "SearchUnaryRule" should "perform SearchUnary" in {
+      assert(step(Unary(Neg, Binary(Plus, N(1.0), N(2.0)))) === Unary(Neg, N(3.0)))
+    }
+    "SearchBinary" should "perform SearchBinary" in {
+      assert(step(Binary(Plus, Binary(Plus, N(1.0), N(2.0)), N(3.0))) === Binary(Plus, N(3.0), N(3.0)))
+    }
+  }
 }
 
 // An adapter class to pass in your Lab3 object.
