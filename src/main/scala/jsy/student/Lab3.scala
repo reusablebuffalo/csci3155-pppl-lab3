@@ -224,6 +224,7 @@ object Lab3 extends JsyApplication with Lab3Like {
   def step(e: Expr): Expr = e match {
     /* Base Cases: Do Rules */
     case Print(v1) if isValue(v1) => println(pretty(v1)); Undefined
+    // ****** Your cases here
     case N(_) | B(_) | S(_) | Undefined | Function(_, _, _) => e
     case Unary(Neg, v) if isValue(v) => N(-toNumber(v)) // do neg
     case Unary(Not, v) if isValue(v) => B(!toBoolean(v)) // do not
@@ -261,13 +262,23 @@ object Lab3 extends JsyApplication with Lab3Like {
       case Function(None, x, e1) => substitute(e1, v2, x)
       case Function(Some(x1), x2, e1) => substitute(substitute(e1, v1, x1), v2, x2)
     }
-      // ****** Your cases here
-
     /* Inductive Cases: Search Rules */
-    case Print(e1) => Print(step(e1))
+    case Print(e1) => Print(step(e1)) // serach print
 
       // ****** Your cases here
-
+    case Unary(uop, e1) => Unary(uop, step(e1)) // searchUnary
+    case Binary(bop, e1, e2) if !isValue(e1) => Binary(bop, step(e1) ,e2) // searchBinary1
+    case Binary(bop @ (Eq | Ne), v1, e2) if isValue(v1) => v1 match { // serachEquality2
+      case Function(_,_,_) => throw DynamicTypeError(e)
+      case _ => Binary(bop, v1, step(e2))
+    }
+    case Binary(bop, v1, e2) if isValue(v1) => Binary(bop, v1, step(e2)) // searchBinaryArith2
+    case If(e1, e2, e3) => If(step(e1) , e2, e3) // searchIf
+    case ConstDecl(x, e1, e2) => ConstDecl(x, step(e1), e2) // stepConst
+    case Call(e1, e2) => e1 match {
+      case Function(_,_,_) => Call(e1, step(e2)) // recursive call (searchCall2)
+      case _ => Call(step(e1), e2) // searchCall1
+    }
     /* Cases that should never match. Your cases above should ensure this. */
     case Var(_) => throw new AssertionError("Gremlins: internal error, not closed expression.")
     case N(_) | B(_) | Undefined | S(_) | Function(_, _, _) => throw new AssertionError("Gremlins: internal error, step should not be called on values.");
