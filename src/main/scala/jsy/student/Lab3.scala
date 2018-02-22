@@ -207,16 +207,17 @@ object Lab3 extends JsyApplication with Lab3Like {
   def substitute(e: Expr, v: Expr, x: String): Expr = {
     require(isValue(v))
     e match {
-      case N(_) | B(_) | Undefined | S(_) => e
+      case N(_) | B(_) | Undefined | S(_) => e // base cases
+
       case Print(e1) => Print(substitute(e1, v, x))
-      case Unary(uop, e1) => ???
-      case Binary(bop, e1, e2) => ???
-      case If(e1, e2, e3) => ???
-      case Call(e1, e2) => ???
-      case Var(y) => ???
-      case Function(None, y, e1) => ???
-      case Function(Some(y1), y2, e1) => ???
-      case ConstDecl(y, e1, e2) => ???
+      case Unary(uop, e1) => Unary(uop, substitute(e1, v, x)) // sub inside inner expression
+      case Binary(bop, e1, e2) => Binary(bop, substitute(e1, v,x), substitute(e2, v,x)) // sub inner expressions
+      case If(e1, e2, e3) => If(substitute(e1, v, x), substitute(e2, v, x), substitute(e3, v, x))
+      case Call(e1, e2) => Call(substitute(e1, v, x), substitute(e2, v, x))
+      case Var(y) => if (x == y) v else Var(y) // only replace if this is the varibale x to be substituted
+      case Function(None, y, e1) => if (x != y) Function(None, y, substitute(e1, v, x)) else e
+      case Function(Some(y1), y2, e1) => if ((x != y1) && (x != y2)) Function(Some(y1), y2, substitute(e1, v, x)) else e
+      case ConstDecl(y, e1, e2) => ConstDecl(y, substitute(e1, v, x), if(x == y) e2 else substitute(e2, v, x))
     }
   }
 
@@ -257,7 +258,8 @@ object Lab3 extends JsyApplication with Lab3Like {
 
     case ConstDecl(x, v1, e2) if isValue(v1) => substitute(e2, v1, x) // DoConst; sub in v1 for x in expr e2
     case Call(v1, v2) if isValue(v1) && isValue(v2) => v1 match {
-      case Function(None, x, e1) => ???
+      case Function(None, x, e1) => substitute(e1, v2, x)
+      case Function(Some(x1), x2, e1) => substitute(substitute(e1, v1, x1), v2, x2)
     }
       // ****** Your cases here
 
