@@ -196,6 +196,50 @@ class Lab3Spec(lab3: Lab3Like) extends FlatSpec {
     "SearchBinary" should "perform SearchBinary" in {
       assert(step(Binary(Plus, Binary(Plus, N(1.0), N(2.0)), N(3.0))) === Binary(Plus, N(3.0), N(3.0)))
     }
+    "SearchBinaryArith2" should "perform SearchBinaryArith2" in {
+      assert(step(Binary(Div, N(1.0), Print(S("print")))) === Binary(Div, N(1.0), Undefined))
+    }
+    "SearchEquality2" should "perform SearchEquality2" in {
+      assert(step(Binary(Ne, N(1.0), Print(S("print")))) === Binary(Ne, N(1.0), Undefined))
+    }
+    "SearchPrint" should "perform SearchPrint" in {
+      assert(step(Print(Binary(Minus, N(10), N(7.5)))) === Print(N(2.5))) // eval inner expression first
+    }
+    "SearchIf" should "perform SearchIf" in {
+      assertResult(If(S("hi"), Print(N(1)), N(1.0))) {
+        step(If(Binary(Plus, S("h"), S("i")), Print(N(1)), N(1.0))) // should step e1 first
+      }
+    }
+    "SearchConst" should "perform SearchConst" in {
+      assertResult(ConstDecl("x", B(false), Binary(Plus, Var("x"), N(1.0)))){
+        step(ConstDecl("x", Unary(Not, B(true)), Binary(Plus, Var("x"), N(1.0))))
+      }
+    }
+    "SearchCall1" should "perform SearchCall1" in {
+      assert(step(Call(Call(Function(None, "x", Binary(Plus, Var("x"), N(1.0))), N(1.0)), N(10))) === Call(Binary(Plus, N(1.0), N(1.0)), N(10)))
+    }
+    "SearchCall2" should "perform SearchCall2" in {
+      assert(step(Call(Function(None, "x", Var("x")), Binary(Plus, N(2.0), N(3.0)))) === Call(Function(None, "x", Var("x")), N(5.0)))
+    }
+
+    // type errors
+
+    "Function === expr" should "TypeErrorEquality1" in {
+      intercept[DynamicTypeError] {
+        step(Binary(Eq, Function(Some("f"), "x", Var("x")), N(1.0)))
+      }
+    }
+    "expr === Function" should "TypeErrorEquality2" in {
+      intercept[DynamicTypeError] {
+        step(Binary(Ne, N(1.0), Function(Some("f"), "x", Var("x"))))
+      }
+    }
+    "calling a non-function value" should "give TypeErrorCall" in {
+      intercept[DynamicTypeError] {
+        step(Call(N(1.0), B(true)))
+      }
+    }
+
   }
 }
 

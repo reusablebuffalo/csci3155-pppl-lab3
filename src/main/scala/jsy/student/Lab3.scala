@@ -208,16 +208,16 @@ object Lab3 extends JsyApplication with Lab3Like {
         case (Function(None, x, v1), e2) => eval(extend(env, x, eval(env,e2)), v1)
         case _ => throw DynamicTypeError(e)
       }
-      case _ => ??? // delete this line when done
+      //case _ => ??? // delete this line when done
     }
   }
 
 
   /* Small-Step Interpreter with Static Scoping */
 
-  def iterate(e0: Expr)(next: (Expr, Int) => Option[Expr]): Expr = {
+  def iterate(e0: Expr)(next: (Expr, Int) => Option[Expr]): Expr = { // iterate method will be called with step in Lab3Like.scala
     def loop(e: Expr, n: Int): Expr = next(e,n) match { // find next
-      case None => e // if None, return e
+      case None => e                    // if None, return e
       case Some(exp) => loop(exp, n+1) // else recurse
     }
     loop(e0, 0)
@@ -226,17 +226,21 @@ object Lab3 extends JsyApplication with Lab3Like {
   def substitute(e: Expr, v: Expr, x: String): Expr = {
     require(isValue(v))
     e match {
-      case N(_) | B(_) | Undefined | S(_) => e // base cases
-
+      case N(_) | B(_) | Undefined | S(_) => e // base cases (nothing can be subbed)
+      case Var(y) => if (x == y) v else Var(y) // only replace if this is the variable x to be substituted
       case Print(e1) => Print(substitute(e1, v, x))
-      case Unary(uop, e1) => Unary(uop, substitute(e1, v, x)) // sub inside inner expression
+
+      case Unary(uop, e1) => Unary(uop, substitute(e1, v, x)) // sub v for x in inner expressions
       case Binary(bop, e1, e2) => Binary(bop, substitute(e1, v,x), substitute(e2, v,x)) // sub inner expressions
       case If(e1, e2, e3) => If(substitute(e1, v, x), substitute(e2, v, x), substitute(e3, v, x))
       case Call(e1, e2) => Call(substitute(e1, v, x), substitute(e2, v, x))
-      case Var(y) => if (x == y) v else Var(y) // only replace if this is the varibale x to be substituted
-      case Function(None, y, e1) => if (x != y) Function(None, y, substitute(e1, v, x)) else e
+
+      case Function(None, y, e1) => if (x != y) Function(None, y, substitute(e1, v, x)) else e // don't sub the variables in the function
       case Function(Some(y1), y2, e1) => if ((x != y1) && (x != y2)) Function(Some(y1), y2, substitute(e1, v, x)) else e
-      case ConstDecl(y, e1, e2) => ConstDecl(y, substitute(e1, v, x), if(x == y) e2 else substitute(e2, v, x))
+      case ConstDecl(y, e1, e2) => {
+        val new_e2 = if(x==y) e2 else substitute(e2, v, x) // only sub if x!=y
+        ConstDecl(y, substitute(e1, v, x), new_e2)
+      }
     }
   }
 
