@@ -9,8 +9,8 @@ object Lab3 extends JsyApplication with Lab3Like {
   /*
    * CSCI 3155: Lab 3
    * Author : Ian Smith
+   * Partner: Katie Gray
    *
-   * Partner: <Your Partner's Name>
    * Collaborators: <Any Collaborators>
    */
 
