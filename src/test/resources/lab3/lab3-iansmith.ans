@@ -1,0 +1,20 @@
+# Evaluating ...
+5
+undefined
+30
+# Stepping ...
+##    0: ConstDecl(x,N(1.0),ConstDecl(f,Function(Some(g),x,Binary(And,Unary(Not,Print(Print(Var(x)))),Binary(Times,Var(x),Binary(Plus,Var(x),N(1.0))))),Call(Var(f),Call(Function(None,x,Binary(Plus,Var(x),N(4.0))),Var(x)))))
+##    1: ConstDecl(f,Function(Some(g),x,Binary(And,Unary(Not,Print(Print(Var(x)))),Binary(Times,Var(x),Binary(Plus,Var(x),N(1.0))))),Call(Var(f),Call(Function(None,x,Binary(Plus,Var(x),N(4.0))),N(1.0))))
+##    2: Call(Function(Some(g),x,Binary(And,Unary(Not,Print(Print(Var(x)))),Binary(Times,Var(x),Binary(Plus,Var(x),N(1.0))))),Call(Function(None,x,Binary(Plus,Var(x),N(4.0))),N(1.0)))
+##    3: Call(Function(Some(g),x,Binary(And,Unary(Not,Print(Print(Var(x)))),Binary(Times,Var(x),Binary(Plus,Var(x),N(1.0))))),Binary(Plus,N(1.0),N(4.0)))
+##    4: Call(Function(Some(g),x,Binary(And,Unary(Not,Print(Print(Var(x)))),Binary(Times,Var(x),Binary(Plus,Var(x),N(1.0))))),N(5.0))
+##    5: Binary(And,Unary(Not,Print(Print(N(5.0)))),Binary(Times,N(5.0),Binary(Plus,N(5.0),N(1.0))))
+5
+##    6: Binary(And,Unary(Not,Print(Undefined)),Binary(Times,N(5.0),Binary(Plus,N(5.0),N(1.0))))
+undefined
+##    7: Binary(And,Unary(Not,Undefined),Binary(Times,N(5.0),Binary(Plus,N(5.0),N(1.0))))
+##    8: Binary(And,B(true),Binary(Times,N(5.0),Binary(Plus,N(5.0),N(1.0))))
+##    9: Binary(Times,N(5.0),Binary(Plus,N(5.0),N(1.0)))
+##   10: Binary(Times,N(5.0),N(6.0))
+##   11: N(30.0)
+30
