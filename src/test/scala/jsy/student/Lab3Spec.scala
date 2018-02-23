@@ -239,7 +239,13 @@ class Lab3Spec(lab3: Lab3Like) extends FlatSpec {
         step(Call(N(1.0), B(true)))
       }
     }
-
+    // test case that behaves differently under dynamic and static
+    "dynamic and static scoping" should "evaluate these differently" in {
+      val exp = parse("const x = 3; const g = function (x) { return function (y) {return x}}; g(7)(1)")
+      assert(iterateStep(exp) != eval(empty, exp))
+      assert(iterateStep(exp) === N(7.0)) // static should eval to 7 because scope of x bound to 7 is not lost
+      assert(eval(empty, exp) === N(3.0)) // dynamic should eval to 3, because scope of the x inside function is lost on call
+    }
   }
 }
 
