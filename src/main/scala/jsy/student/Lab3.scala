@@ -206,7 +206,7 @@ object Lab3 extends JsyApplication with Lab3Like {
             eval(extend(extend(env, x, eval(env, e2)), p, Function(Some(p), x, v1)), v1)
           }
         case (Function(None, x, v1), e2) => eval(extend(env, x, eval(env,e2)), v1)
-        case _ => throw DynamicTypeError(e)
+        case _ => throw DynamicTypeError(e) // if anything besides a function
       }
       //case _ => ??? // delete this line when done
     }
